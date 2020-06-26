@@ -3655,7 +3655,7 @@ static CURLcode create_conn(struct Curl_easy *data,
   data->set.ssl.issuercert_blob = data->set.blobs[BLOB_SSL_ISSUERCERT_ORIG];
 
   if(!Curl_clone_primary_ssl_config(&data->set.ssl.primary,
-     &conn->ssl_config)) {
+                                    &conn->ssl_config)) {
     result = CURLE_OUT_OF_MEMORY;
     goto out;
   }
