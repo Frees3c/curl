@@ -97,14 +97,12 @@ static CURLcode blobdup(struct curl_blob **dest,
     struct curl_blob *d = *dest;
     struct curl_blob *s = *src;
     d->len = s->len;
-    d->flags = s->flags;
-    if(s->flags & CURL_BLOB_COPY) {
-      d->data = Curl_memdup(s->data, s->len);
-      if(!d->data)
-        return CURLE_OUT_OF_MEMORY;
-    }
-    else
-      d->data = s->data;
+    /* Always duplicate because the connection may survive longer than the
+       handle that passed in the blob. */
+    d->flags = CURL_BLOB_COPY;
+    d->data = Curl_memdup(s->data, s->len);
+    if(!d->data)
+      return CURLE_OUT_OF_MEMORY;
   }
   return CURLE_OK;
 }
@@ -130,9 +128,7 @@ Curl_ssl_config_matches(struct ssl_primary_config *data,
      (data->verifypeer == needle->verifypeer) &&
      (data->verifyhost == needle->verifyhost) &&
      (data->verifystatus == needle->verifystatus) &&
-     blobcmp(data->issuercert_blob, needle->issuercert_blob) &&
      blobcmp(data->cert_blob, needle->cert_blob) &&
-     blobcmp(data->key_blob, needle->key_blob) &&
      Curl_safe_strcasecompare(data->CApath, needle->CApath) &&
      Curl_safe_strcasecompare(data->CAfile, needle->CAfile) &&
      Curl_safe_strcasecompare(data->clientcert, needle->clientcert) &&
@@ -157,9 +153,7 @@ Curl_clone_primary_ssl_config(struct ssl_primary_config *source,
   dest->verifystatus = source->verifystatus;
   dest->sessionid = source->sessionid;
 
-  CLONE_BLOB(issuercert_blob);
   CLONE_BLOB(cert_blob);
-  CLONE_BLOB(key_blob);
   CLONE_STRING(CApath);
   CLONE_STRING(CAfile);
   CLONE_STRING(clientcert);
@@ -186,9 +180,7 @@ void Curl_free_primary_ssl_config(struct ssl_primary_config *sslc)
   Curl_safefree(sslc->cipher_list);
   Curl_safefree(sslc->cipher_list13);
   Curl_safefree(sslc->pinned_key);
-  FREE_BLOB(sslc->issuercert_blob);
   FREE_BLOB(sslc->cert_blob);
-  FREE_BLOB(sslc->key_blob);
 }
 
 #ifdef USE_SSL
